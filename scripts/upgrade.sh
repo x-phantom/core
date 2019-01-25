@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-pm2 stop ark-core > /dev/null 2>&1
-pm2 stop ark-core-relay > /dev/null 2>&1
-pm2 stop ark-core-forger > /dev/null 2>&1
+pm2 stop qredit-core > /dev/null 2>&1
+pm2 stop qredit-core-relay > /dev/null 2>&1
+pm2 stop qredit-core-forger > /dev/null 2>&1
 
 pm2 stop core > /dev/null 2>&1
 pm2 stop core-relay > /dev/null 2>&1
