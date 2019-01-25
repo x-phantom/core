@@ -19,6 +19,13 @@ export class Application {
     private namespace: string;
 
     /**
+     * Create a new application instance.
+     */
+    public constructor() {
+        this.container = new Container();
+    }
+
+    /**
      * Boot the application.
      */
     public boot(): void {
@@ -177,20 +184,9 @@ export class Application {
     }
 
     /**
-     * Bind all of the application paths in the container.
-     */
-    private bindPathsInContainer() {
-        this.container.bind("path.data", this.dataPath());
-        this.container.bind("path.config", this.configPath());
-        this.container.bind("path.cache", this.cachePath());
-        this.container.bind("path.log", this.logPath());
-        this.container.bind("path.temp", this.tempPath());
-    }
-
-    /**
      * Get the application namespace.
      */
-    private getNamespace() {
+    public getNamespace(): string {
         if (this.namespace) {
             return this.namespace;
         }
@@ -200,5 +196,16 @@ export class Application {
         if (!this.namespace) {
             throw new Error("Unable to detect application namespace.");
         }
+    }
+
+    /**
+     * Bind all of the application paths in the container.
+     */
+    private bindPathsInContainer() {
+        this.container.bind("path.data", this.dataPath());
+        this.container.bind("path.config", this.configPath());
+        this.container.bind("path.cache", this.cachePath());
+        this.container.bind("path.log", this.logPath());
+        this.container.bind("path.temp", this.tempPath());
     }
 }
