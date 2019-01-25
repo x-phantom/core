@@ -11,6 +11,8 @@ interface IPlugin {
     getName(): string;
 }
 
+// @TODO: make use of mixins for each type of binding
+
 export class Container {
     /**
      * The current available container.
@@ -89,6 +91,51 @@ export class Container {
     }
 
     /**
+     * Get a resolved instance from the container container.
+     */
+    public getResolve<T = any>(key: string): T {
+        return this.resolved.get(key).concrete;
+    }
+
+    /**
+     * Get a binding from the container container.
+     */
+    public getBinding<T = any>(key: string): T {
+        return this.bindings.get(key).concrete;
+    }
+
+    /**
+     * Get a method binding from the container container.
+     */
+    public getMethodBinding<T = any>(key: string): T {
+        return this.methodBindings.get(key);
+    }
+
+    /**
+     * Get an instance binding from the container container.
+     */
+    public getInstance<T = any>(key: string): T {
+        return this.instances.get(key).concrete;
+    }
+
+    /**
+     * Get the alias for an abstract if available.
+     */
+    public getAlias(key: string): string {
+        if (!this.hasAlias(key)) {
+            return key;
+        }
+
+        const alias = this.aliases.get(key);
+
+        if (alias === key) {
+            throw new Error(`[${key}] is aliased to itself.`);
+        }
+
+        return alias;
+    }
+
+    /**
      * Determine if the container has any binding.
      */
     public bound(key: string): boolean {
@@ -151,7 +198,20 @@ export class Container {
             key = this.getAlias(key);
         }
 
-        return this.hasResolved("key") || !!this.instances[key];
+        return this.hasResolved(key) || this.hasInstance(key);
+    }
+
+    /**
+     * Determine if a given type is shared.
+     */
+    public isShared(key: string): boolean {
+        if (this.hasInstance(key)) {
+            return true;
+        }
+
+        const binding = this.bindings.get(key);
+
+        return binding && binding.shared && binding.shared === true;
     }
 
     /**
@@ -175,16 +235,20 @@ export class Container {
     /**
      * Register a binding with the container.
      */
-    public bind(key: string, value: any, shared: boolean = false, overwrite: boolean = false): void {
+    public bind(key: string, concrete: any, shared: boolean = false, overwrite: boolean = false): void {
         if (this.hasBinding(key) && !overwrite) {
             throw new BindingAlreadyExists(key);
         }
 
         if (shared) {
-            value = value.singleton();
+            concrete = concrete.singleton();
         }
 
-        this.bindings.set(key, value);
+        if (this.isResolved(key)) {
+            // @TODO
+        }
+
+        this.bindings.set(key, { concrete, shared });
     }
 
     /**
@@ -286,34 +350,38 @@ export class Container {
     }
 
     /**
-     * Get the alias for an abstract if available.
+     * Remove a value from the resolved cache.
      */
-    public getAlias(key: string): string {
-        if (!this.hasAlias(key)) {
-            return key;
-        }
-
-        const alias = this.getAlias(key);
-
-        if (alias === key) {
-            throw new Error(`[${key}] is aliased to itself.`);
-        }
-
-        return this.getAlias(alias);
+    public forgetResolved(key: string): void {
+        this.resolved.delete(key);
     }
 
     /**
-     * Remove a resolved instance from the instance cache.
+     * Remove a value from the binding cache.
+     */
+    public forgetBinding(key: string): void {
+        this.bindings.delete(key);
+    }
+
+    /**
+     * Remove a value from the method binding cache.
+     */
+    public forgetMethodBinding(key: string): void {
+        this.methodBindings.delete(key);
+    }
+
+    /**
+     * Remove a value from the instance cache.
      */
     public forgetInstance(key: string): void {
         this.instances.delete(key);
     }
 
     /**
-     * Clear all of the instances from the container.
+     * Remove a value from the alias cache.
      */
-    public forgetInstances(): void {
-        this.instances = new Map();
+    public forgetAlias(key: string): void {
+        this.aliases.delete(key);
     }
 
     /**
@@ -328,11 +396,59 @@ export class Container {
     }
 
     /**
+     * Clear all of the resolved instances from the container.
+     */
+    public flushResolved(): void {
+        this.resolved.clear();
+    }
+
+    /**
+     * Clear all of the bindings from the container.
+     */
+    public flushBindings(): void {
+        this.bindings.clear();
+    }
+
+    /**
+     * Clear all of the method bindings from the container.
+     */
+    public flushMethodBindings(): void {
+        this.methodBindings.clear();
+    }
+
+    /**
+     * Clear all of the instances from the container.
+     */
+    public flushInstances(): void {
+        this.instances.clear();
+    }
+
+    /**
+     * Clear all of the aliases from the container.
+     */
+    public flushAliases(): void {
+        this.aliases.clear();
+    }
+
+    /**
      * Resolve the given type from the container.
      */
     private resolve<T = any>(key: string): T {
         try {
-            return this.container.resolve<T>(key);
+            const abstract = this.getAlias(key);
+
+            let concrete = this.getConcrete(key);
+            concrete = this.isBuildable(concrete, abstract) ? this.build(concrete) : this.make(concrete);
+
+            if (this.isShared(abstract)) {
+                this.instances.set(key, abstract);
+            }
+
+            concrete = this.container.resolve<T>(key);
+
+            this.resolved.set(abstract, true);
+
+            return concrete;
         } catch (err) {
             throw new EntryDoesNotExist(err.message);
         }
@@ -341,15 +457,15 @@ export class Container {
     /**
      * Get the concrete type for a given abstract.
      */
-    private getConcrete(key: string): any {
-        // @TODO
+    private getConcrete(concrete: any): any {
+        return concrete;
     }
 
     /**
      * Determine if the given concrete is buildable.
      */
-    private isBuildable(plugin: IPlugin): any {
-        // @TODO
+    private isBuildable(concrete: any, abstract: any): boolean {
+        return concrete === abstract;
     }
 
     /**

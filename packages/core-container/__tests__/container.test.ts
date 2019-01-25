@@ -21,112 +21,73 @@ describe("Container", () => {
         });
     });
 
-    describe("getResolved", () => {
-        it("should return a map", () => {
-            expect(container.getResolved()).toBeInstanceOf(Map);
-        });
-    });
-
-    describe("getBindings", () => {
-        it("should return a map", () => {
-            expect(container.getBindings()).toBeInstanceOf(Map);
-        });
-    });
-
-    describe("getMethodBindings", () => {
-        it("should return a map", () => {
-            expect(container.getMethodBindings()).toBeInstanceOf(Map);
-        });
-    });
-
-    describe("getInstances", () => {
-        it("should return a map", () => {
-            expect(container.getInstances()).toBeInstanceOf(Map);
-        });
-    });
-
-    describe("getAliases", () => {
-        it("should return a map", () => {
-            expect(container.getAliases()).toBeInstanceOf(Map);
-        });
-    });
-
-    // describe("bound", () => {});
-
-    describe("hasResolved", () => {
-        it("should pass to resolve", () => {
-            expect(container.hasResolved("key")).toBeFalse();
-        });
-
-        it("should fail to resolve", () => {
-            container.getResolved().set("key", "value");
-
-            expect(container.hasResolved("key")).toBeTrue();
-        });
-    });
-
-    describe("hasBinding", () => {
-        it("should pass to resolve", () => {
-            expect(container.hasBinding("key")).toBeFalse();
-        });
-
-        it("should fail to resolve", () => {
-            container.getBindings().set("key", "value");
-
-            expect(container.hasBinding("key")).toBeTrue();
-        });
-    });
-
-    describe("hasMethodBinding", () => {
-        it("should pass to resolve", () => {
-            expect(container.hasMethodBinding("key")).toBeFalse();
-        });
-
-        it("should fail to resolve", () => {
-            container.getMethodBindings().set("key", "value");
-
-            expect(container.hasMethodBinding("key")).toBeTrue();
-        });
-    });
-
-    describe("hasInstance", () => {
-        it("should pass to resolve", () => {
-            expect(container.hasInstance("key")).toBeFalse();
-        });
-
-        it("should fail to resolve", () => {
-            container.getInstances().set("key", "value");
-
-            expect(container.hasInstance("key")).toBeTrue();
-        });
-    });
-
-    describe("hasAlias", () => {
-        it("should pass to resolve", () => {
-            expect(container.hasAlias("key")).toBeFalse();
-        });
-
-        it("should fail to resolve", () => {
-            container.getAliases().set("key", "value");
-
-            expect(container.hasAlias("key")).toBeTrue();
-        });
+    describe("has", () => {
+        test.each(["getResolved", "getBindings", "getMethodBindings", "getInstances", "getAliases"])(
+            "%s should return a map",
+            method => {
+                expect(container[method]()).toBeInstanceOf(Map);
+            },
+        );
     });
 
     describe("has", () => {
-        it("should pass to resolve", () => {
-            expect(container.has("key")).toBeFalse();
+        test.each([
+            "bound",
+            "has",
+            "hasResolved",
+            "hasResolved",
+            "hasBinding",
+            "hasMethodBinding",
+            "hasInstance",
+            "hasAlias",
+        ])("%s should return false after calling %s", method => {
+            expect(container[method]("key")).toBeFalse();
         });
 
-        it("should fail to resolve", () => {
-            container.register("key", "value");
+        test.each([
+            [null, "register", "bound"],
+            [null, "register", "has"],
+            ["getResolved", "set", "hasResolved"],
+            ["getBindings", "set", "hasBinding"],
+            ["getMethodBindings", "set", "hasMethodBinding"],
+            ["getInstances", "set", "hasInstance"],
+            ["getAliases", "set", "hasAlias"],
+        ])("%s should return true after calling %s", (getter, setter, has) => {
+            setter = getter ? container[getter]()[setter]("key", "value") : container[setter]("key", "value");
 
-            expect(container.has("key")).toBeTrue();
+            expect(container[has]("key")).toBeTrue();
         });
     });
 
-    // describe("isResolved", () => {});
-    // describe("isAlias", () => {});
+    describe("isResolved", () => {
+        const instance = new Person();
+
+        it("should not be resolved", () => {
+            expect(container.isResolved("key")).toBeFalse();
+        });
+
+        it("should be resolved", () => {
+            container.register("key", instance);
+
+            expect(container.isResolved("key")).toBeFalse();
+
+            container.resolve("key");
+
+            expect(container.isResolved("key")).toBeTrue();
+        });
+    });
+
+    describe("isAlias", () => {
+        it("should not be an alias", () => {
+            expect(container.isAlias("key")).toBeFalse();
+        });
+
+        it("should be an alias", () => {
+            container.alias("key", "value");
+
+            expect(container.isAlias("key")).toBeTrue();
+        });
+    });
 
     describe("bind", () => {
         it("should bind the value if not set", () => {
@@ -149,12 +110,12 @@ describe("Container", () => {
             container.bind("key", "value");
 
             expect(container.getBindings().size).toBe(1);
-            expect(container.getBindings().get("key")).toBe("value");
+            expect(container.getBinding("key")).toBe("value");
 
             container.bind("key", "new-value", false, true);
 
             expect(container.getBindings().size).toBe(1);
-            expect(container.getBindings().get("key")).toBe("new-value");
+            expect(container.getBinding("key")).toBe("new-value");
         });
     });
 
@@ -228,7 +189,62 @@ describe("Container", () => {
     // describe("get", () => {});
     // describe("build", () => {});
     // describe("getAlias", () => {});
-    // describe("forgetInstance", () => {});
-    // describe("forgetInstances", () => {});
-    // describe("flush", () => {});
+
+    describe("forget", () => {
+        test.each([
+            ["getResolved", "forgetResolved"],
+            ["getBindings", "forgetBinding"],
+            ["getMethodBindings", "forgetMethodBinding"],
+            ["getInstances", "forgetInstance"],
+            ["getAliases", "forgetAlias"],
+        ])("%s should be forgotten after calling %s", (collection, forget) => {
+            container[collection]().set("key", "value");
+
+            expect(container[collection]().size).toBe(1);
+
+            container[forget]("key");
+
+            expect(container[collection]().size).toBe(0);
+        });
+    });
+
+    describe("flush", () => {
+        it("should flush all maps", () => {
+            container.getResolved().set("key", "value");
+            container.getBindings().set("key", "value");
+            container.getMethodBindings().set("key", "value");
+            container.getInstances().set("key", "value");
+            container.getAliases().set("key", "value");
+
+            expect(container.getResolved().size).toBe(1);
+            expect(container.getBindings().size).toBe(1);
+            expect(container.getMethodBindings().size).toBe(1);
+            expect(container.getInstances().size).toBe(1);
+            expect(container.getAliases().size).toBe(1);
+
+            container.flush();
+
+            expect(container.getResolved().size).toBe(0);
+            expect(container.getBindings().size).toBe(0);
+            expect(container.getMethodBindings().size).toBe(0);
+            expect(container.getInstances().size).toBe(0);
+            expect(container.getAliases().size).toBe(0);
+        });
+
+        test.each([
+            ["getResolved", "flushResolved"],
+            ["getBindings", "flushBindings"],
+            ["getMethodBindings", "flushMethodBindings"],
+            ["getInstances", "flushInstances"],
+            ["getAliases", "flushAliases"],
+        ])("%s should be empty after calling %s", (collection, flush) => {
+            container[collection]().set("key", "value");
+
+            expect(container[collection]().size).toBe(1);
+
+            container[flush]();
+
+            expect(container[collection]().size).toBe(0);
+        });
+    });
 });
