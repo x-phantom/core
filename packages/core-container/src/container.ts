@@ -1,10 +1,16 @@
-import { BindingDoesNotExist } from "./errors";
+import { AwilixContainer, createContainer } from "awilix";
+import { BindingAlreadyExists, BindingDoesNotExist, InstanceAlreadyExists } from "./errors";
 
 interface IPlugin {
     getName(): string;
 }
 
 export class Container {
+    /**
+     * The current available container.
+     */
+    private container: AwilixContainer = createContainer();
+
     /**
      * An array of the types that have been resolved.
      */
@@ -31,6 +37,13 @@ export class Container {
      * @var array
      */
     private aliases: Record<string, any> = [];
+
+    /**
+     * Create a new container instance.
+     */
+    public constructor() {
+        // @TODO
+    }
 
     /**
      * Determine if the given abstract type has been bound.
@@ -67,8 +80,12 @@ export class Container {
     /**
      * Register a binding with the container.
      */
-    public bind(key: string, concrete: any, shared: boolean = false): void {
-        // @TODO
+    public bind(key: string, concrete: any, shared: boolean = false, overwrite: boolean = false): void {
+        if (this.bindings[key] && !overwrite) {
+            throw new BindingAlreadyExists(key);
+        }
+
+        this.bindings[key] = concrete;
     }
 
     /**
@@ -111,15 +128,19 @@ export class Container {
     /**
      * Register an existing instance as shared in the container.
      */
-    public instance(key: string, instance: any): void {
-        // @TODO
+    public instance(key: string, instance: any, overwrite: boolean = false): void {
+        if (this.instances[key] && !overwrite) {
+            throw new InstanceAlreadyExists(key);
+        }
+
+        this.instances[key] = instance;
     }
 
     /**
      * Alias a type to a different name.
      */
-    public alias(abstract, alias) {
-        this.aliases[alias] = abstract;
+    public alias(key: string, value: string) {
+        this.aliases[key] = value;
     }
 
     /**

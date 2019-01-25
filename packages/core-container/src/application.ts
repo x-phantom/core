@@ -4,7 +4,7 @@ import { Container } from "./container";
 // @TODO: Include/Extend the Container
 export class Application {
     /**
-     * The current available container (if any).
+     * The current available container.
      */
     private container: Container;
 
