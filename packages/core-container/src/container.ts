@@ -1,15 +1,5 @@
 import * as awilix from "awilix";
-import {
-    BindingAlreadyExists,
-    BindingDoesNotExist,
-    EntryAlreadyExists,
-    EntryDoesNotExist,
-    InstanceAlreadyExists,
-} from "./errors";
-
-interface IPlugin {
-    getName(): string;
-}
+import { BindingAlreadyExists, EntryAlreadyExists, EntryDoesNotExist, InstanceAlreadyExists } from "./errors";
 
 // @TODO: make use of mixins for each type of binding
 
@@ -133,6 +123,87 @@ export class Container {
         }
 
         return alias;
+    }
+
+    /**
+     * Remove a value from the resolved cache.
+     */
+    public forgetResolved(abstract: string): void {
+        this.resolved.delete(abstract);
+    }
+
+    /**
+     * Remove a value from the binding cache.
+     */
+    public forgetBinding(abstract: string): void {
+        this.bindings.delete(abstract);
+    }
+
+    /**
+     * Remove a value from the method binding cache.
+     */
+    public forgetMethodBinding(abstract: string): void {
+        this.methodBindings.delete(abstract);
+    }
+
+    /**
+     * Remove a value from the instance cache.
+     */
+    public forgetInstance(abstract: string): void {
+        this.instances.delete(abstract);
+    }
+
+    /**
+     * Remove a value from the alias cache.
+     */
+    public forgetAlias(abstract: string): void {
+        this.aliases.delete(abstract);
+    }
+
+    /**
+     * Flush the container of all bindings and resolved instances.
+     */
+    public flush(): void {
+        this.aliases = new Map();
+        this.resolved = new Map();
+        this.bindings = new Map();
+        this.methodBindings = new Map();
+        this.instances = new Map();
+    }
+
+    /**
+     * Clear all resolved instances from the container.
+     */
+    public flushResolved(): void {
+        this.resolved.clear();
+    }
+
+    /**
+     * Clear all bindings from the container.
+     */
+    public flushBindings(): void {
+        this.bindings.clear();
+    }
+
+    /**
+     * Clear all method bindings from the container.
+     */
+    public flushMethodBindings(): void {
+        this.methodBindings.clear();
+    }
+
+    /**
+     * Clear all instances from the container.
+     */
+    public flushInstances(): void {
+        this.instances.clear();
+    }
+
+    /**
+     * Clear all aliases from the container.
+     */
+    public flushAliases(): void {
+        this.aliases.clear();
     }
 
     /**
@@ -270,7 +341,7 @@ export class Container {
     /**
      * Get the method binding for the given method.
      */
-    public callMethodBinding(method: string, parameters: any): any {
+    public callMethodBinding<T = any>(method: string, parameters: any): T {
         return this.methodBindings.get(method)(this, parameters);
     }
 
@@ -304,132 +375,36 @@ export class Container {
     /**
      * Call the given plugin or method and inject the container.
      */
-    public call(callback: CallableFunction, parameters: Record<string, any> = []) {
+    public call(callback: CallableFunction) {
         // @TODO
+    }
+
+    /**
+     * Resolve the given type from the container.
+     */
+    public make<T = any>(abstract: string): T {
+        return this.resolve(abstract);
     }
 
     /**
      * Get a closure to resolve the given type from the container.
      */
-    public factory(abstract: string): any {
+    public factory<T = any>(abstract: string): T {
         return this.make(abstract);
     }
 
     /**
-     * An alias function name for make().
-     */
-    public makeWith(abstract: string, parameters: Record<string, any> = []): any {
-        return this.make(abstract, parameters);
-    }
-
-    /**
      * Resolve the given type from the container.
      */
-    public make(abstract: string, parameters: Record<string, any> = []): any {
+    public get<T = any>(abstract: string): T {
         return this.resolve(abstract);
-    }
-
-    /**
-     * Resolve the given type from the container.
-     */
-    public get(abstract: string): any {
-        try {
-            return this.resolve(abstract);
-        } catch (error) {
-            if (this.has(abstract)) {
-                throw error;
-            }
-
-            throw new BindingDoesNotExist(abstract);
-        }
     }
 
     /**
      * Instantiate a concrete instance of the given type.
      */
-    public build(plugin: IPlugin): any {
-        // @TODO
-    }
-
-    /**
-     * Remove a value from the resolved cache.
-     */
-    public forgetResolved(abstract: string): void {
-        this.resolved.delete(abstract);
-    }
-
-    /**
-     * Remove a value from the binding cache.
-     */
-    public forgetBinding(abstract: string): void {
-        this.bindings.delete(abstract);
-    }
-
-    /**
-     * Remove a value from the method binding cache.
-     */
-    public forgetMethodBinding(abstract: string): void {
-        this.methodBindings.delete(abstract);
-    }
-
-    /**
-     * Remove a value from the instance cache.
-     */
-    public forgetInstance(abstract: string): void {
-        this.instances.delete(abstract);
-    }
-
-    /**
-     * Remove a value from the alias cache.
-     */
-    public forgetAlias(abstract: string): void {
-        this.aliases.delete(abstract);
-    }
-
-    /**
-     * Flush the container of all bindings and resolved instances.
-     */
-    public flush(): void {
-        this.aliases = new Map();
-        this.resolved = new Map();
-        this.bindings = new Map();
-        this.methodBindings = new Map();
-        this.instances = new Map();
-    }
-
-    /**
-     * Clear all resolved instances from the container.
-     */
-    public flushResolved(): void {
-        this.resolved.clear();
-    }
-
-    /**
-     * Clear all bindings from the container.
-     */
-    public flushBindings(): void {
-        this.bindings.clear();
-    }
-
-    /**
-     * Clear all method bindings from the container.
-     */
-    public flushMethodBindings(): void {
-        this.methodBindings.clear();
-    }
-
-    /**
-     * Clear all instances from the container.
-     */
-    public flushInstances(): void {
-        this.instances.clear();
-    }
-
-    /**
-     * Clear all aliases from the container.
-     */
-    public flushAliases(): void {
-        this.aliases.clear();
+    public build<T = any>(abstract: any): T {
+        return this.container.build(abstract);
     }
 
     /**
@@ -469,7 +444,7 @@ export class Container {
     /**
      * Get the concrete type for a given abstract.
      */
-    private getConcrete(abstract: string): any {
+    private getConcrete<T = any>(abstract: string): T {
         return this.hasBinding(abstract) ? this.getBinding(abstract).concrete : abstract;
     }
 
