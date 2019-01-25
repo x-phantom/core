@@ -1,279 +1,243 @@
-import { Container as container, EventEmitter, Logger } from "@arkecosystem/core-interfaces";
-import { createContainer, Resolver } from "awilix";
-import { execSync } from "child_process";
-import delay from "delay";
-import semver from "semver";
-import { configManager } from "./config";
-import { Environment } from "./environment";
-import { PluginRegistrar } from "./registrars/plugin";
+import { getNamespace } from "continuation-local-storage";
 
-export class Container implements container.IContainer {
-    public options: any;
-    public exitEvents: any;
+interface IPlugin {
+    getName(): string;
+}
+
+export class Container {
     /**
-     * May be used by CLI programs to suppress the shutdown messages.
+     * An array of the types that have been resolved.
      */
-    public silentShutdown = false;
-    public hashid: string;
-    public plugins: any;
-    public shuttingDown: boolean;
-    public version: string;
-    public isReady: boolean = false;
-    public variables: any;
-    public config: any;
-    private container = createContainer();
+    private resolved: Record<string, any> = [];
 
     /**
-     * Create a new container instance.
-     * @constructor
+     * The container's bindings.
      */
-    constructor() {
-        /**
-         * The git commit hash of the repository. Used during development to
-         * easily idenfity nodes based on their commit hash and version.
-         */
+    private bindings: Record<string, any> = [];
+
+    /**
+     * The container's method bindings.
+     */
+    private methodBindings: Record<string, any> = [];
+
+    /**
+     * The container's shared instances.
+     */
+    private instances: Record<string, any> = [];
+
+    /**
+     * The registered type aliases.
+     *
+     * @var array
+     */
+    private aliases: Record<string, any> = [];
+
+    /**
+     * Determine if the given abstract type has been bound.
+     */
+    public bound(key: string): boolean {
+        return !!this.bindings[key] || !!this.instances[key] || this.isAlias(key);
+    }
+
+    /**
+     * Determine if the given abstract type has been bound.
+     */
+    public has(key: string): boolean {
+        return this.bound(key);
+    }
+
+    /**
+     * Determine if the given abstract type has been resolved.
+     */
+    public isResolved(key: string): boolean {
+        if (this.isAlias(key)) {
+            key = this.getAlias(key);
+        }
+
+        return !!this.resolved[key] || !!this.instances[key];
+    }
+
+    /**
+     * Determine if a given string is an alias.
+     */
+    public isAlias(key: string): boolean {
+        return !!this.aliases[key];
+    }
+
+    /**
+     * Register a binding with the container.
+     */
+    public bind(key: string, concrete: IPlugin | CallableFunction, shared: boolean = false): void {
+        // @TODO
+    }
+
+    /**
+     * Determine if the container has a method binding.
+     */
+    public hasMethodBinding(key: string): boolean {
+        return !!this.methodBindings[key];
+    }
+
+    /**
+     * Bind a callback to resolve with Container::call.
+     */
+    public bindMethod(method: string, callback: any): void {
+        this.methodBindings[method] = callback;
+    }
+
+    /**
+     * Get the method binding for the given method.
+     */
+    public callMethodBinding(method: string, parameters: any): any {
+        return this.methodBindings[method](this, parameters);
+    }
+
+    /**
+     * Register a binding if it hasn't already been registered.
+     */
+    public bindIf(key: string, concrete: IPlugin): void {
+        if (!this.bound(key)) {
+            this.bind(key, concrete);
+        }
+    }
+
+    /**
+     * Register a shared binding in the container.
+     */
+    public singleton(key: string, concrete: IPlugin): void {
+        this.bind(key, concrete, true);
+    }
+
+    /**
+     * Register an existing instance as shared in the container.
+     */
+    public instance(key: string, instance: any): void {
+        // @TODO
+    }
+
+    /**
+     * Alias a type to a different name.
+     */
+    public alias(abstract, alias) {
+        this.aliases[alias] = abstract;
+    }
+
+    /**
+     * Call the given Closure / class@method and inject its dependencies.
+     */
+    public call(callback: CallableFunction, parameters: Record<string, any> = []) {
+        // @TODO
+    }
+
+    /**
+     * Get a closure to resolve the given type from the container.
+     */
+    public factory(key: string): any {
+        return this.make(key);
+    }
+
+    /**
+     * An alias function name for make().
+     */
+    public makeWith(key: string, parameters: Record<string, any> = []): any {
+        return this.make(key, parameters);
+    }
+
+    /**
+     * Resolve the given type from the container.
+     */
+    public make(key: string, parameters: Record<string, any> = []): any {
+        return this.resolve(key, parameters);
+    }
+
+    /**
+     * Resolve the given type from the container.
+     */
+    public get(key: string): any {
         try {
-            this.hashid = execSync("git rev-parse --short=8 HEAD")
-                .toString()
-                .trim();
-        } catch (e) {
-            this.hashid = "unknown";
-        }
-
-        /**
-         * Register any exit signal handling.
-         */
-        this.registerExitHandler(["SIGINT", "exit"]);
-    }
-
-    /**
-     * Set up the app.
-     * @param  {String} version
-     * @param  {Object} variables
-     * @param  {Object} options
-     * @return {void}
-     */
-    public async setUp(version: string, variables: any, options: any = {}) {
-        this.options = options;
-        this.variables = variables;
-
-        this.setVersion(version);
-
-        // Register the environment variables
-        new Environment(variables).setUp();
-
-        // Mainly used for testing environments!
-        if (options.skipPlugins) {
-            this.isReady = true;
-            return;
-        }
-
-        // Setup the configuration
-        this.config = await configManager.setUp(variables);
-
-        // TODO: Move this out eventually - not really the responsibility of the container
-        this.plugins = new PluginRegistrar(this, options);
-        await this.plugins.setUp();
-
-        this.isReady = true;
-    }
-
-    public getConfig() {
-        return this.config;
-    }
-
-    /**
-     * Tear down the app.
-     * @return {Promise}
-     */
-    public async tearDown() {
-        if (!this.options.skipPlugins) {
-            await this.plugins.tearDown();
-        }
-
-        this.isReady = false;
-    }
-
-    /**
-     * Add a new registration.
-     */
-    public register<T>(name, resolver: Resolver<T>) {
-        try {
-            this.container.register(name, resolver);
-            return this;
-        } catch (err) {
-            throw new Error(err.message);
-        }
-    }
-
-    /**
-     * Resolve a registration.
-     * @param  {string} key
-     * @return {Object}
-     * @throws {Error}
-     */
-    public resolve<T = any>(key): T {
-        try {
-            return this.container.resolve<T>(key);
-        } catch (err) {
-            throw new Error(err.message);
-        }
-    }
-
-    /**
-     * Resolve a plugin.
-     * @param  {string} key
-     * @return {Object}
-     * @throws {Error}
-     */
-    public resolvePlugin<T = any>(key): T {
-        try {
-            return this.container.resolve<container.PluginConfig<T>>(key).plugin;
-        } catch (err) {
-            return null;
-        }
-    }
-
-    /**
-     * Resolve the options of a plugin. Available before a plugin mounts.
-     * @param  {string} key
-     * @return {Object}
-     * @throws {Error}
-     */
-    public resolveOptions(key) {
-        try {
-            return this.container.resolve<container.PluginConfig<any>>(key).options;
-        } catch (err) {
-            throw err;
-        }
-    }
-
-    /**
-     * Determine if the given registration exists.
-     * @param  {String}  key
-     * @return {Boolean}
-     */
-    public has(key) {
-        try {
-            this.container.resolve(key);
-
-            return true;
-        } catch (err) {
-            return false;
-        }
-    }
-
-    /**
-     * Force the container to exit and print the given message and associated error.
-     * @param  {String} message
-     * @param  {Error} error
-     * @return {void}
-     */
-    public forceExit(message, error = null) {
-        this.exit(1, message, error);
-    }
-
-    /**
-     * Exit the container with the given exitCode, message and associated error.
-     * @param  {Number} exitCode
-     * @param  {String} message
-     * @param  {Error} error
-     * @return {void}
-     */
-    public exit(exitCode, message, error = null) {
-        this.shuttingDown = true;
-
-        const logger = this.resolvePlugin<Logger.ILogger>("logger");
-        logger.error(":boom: Container force shutdown :boom:");
-        logger.error(message);
-
-        if (error) {
-            logger.error(error.stack);
-        }
-
-        process.exit(exitCode);
-    }
-
-    /**
-     * Get the application git commit hash.
-     * @throws {String}
-     */
-    public getHashid() {
-        return this.hashid;
-    }
-
-    /**
-     * Get the application version.
-     * @throws {String}
-     */
-    public getVersion() {
-        return this.version;
-    }
-
-    /**
-     * Set the application version.
-     * @param  {String} version
-     * @return {void}
-     */
-    public setVersion(version) {
-        if (!semver.valid(version)) {
-            this.forceExit(
-                // tslint:disable-next-line:max-line-length
-                `The provided version ("${version}") is invalid. Please check https://semver.org/ and make sure you follow the spec.`,
-            );
-        }
-
-        this.version = version;
-    }
-
-    /**
-     * Handle any exit signals.
-     * @return {void}
-     */
-    private registerExitHandler(exitEvents: string[]) {
-        const handleExit = async () => {
-            if (this.shuttingDown) {
-                return;
+            return this.resolve(key);
+        } catch (error) {
+            if (this.has(key)) {
+                throw error;
             }
 
-            this.shuttingDown = true;
+            throw new Error(`[${key}] is not registered.`);
+        }
+    }
 
-            const logger = this.resolvePlugin<Logger.ILogger>("logger");
-            if (logger) {
-                logger.suppressConsoleOutput(this.silentShutdown);
-                logger.info("Core is trying to gracefully shut down to avoid data corruption :pizza:");
-            }
+    /**
+     * Instantiate a concrete instance of the given type.
+     */
+    public build(plugin: IPlugin): any {
+        // @TODO
+    }
 
-            try {
-                /* TODO: core-database-postgres has a dep on core-container. Yet we have code in core-container fetching a reference to core-database-postgres.
-                If we try to import core-database-postgres types, we create a circular dependency: core-container -> core-database-postgres -> core-container.
-                The only thing we're doing here is trying to save the wallets upon shutdown. The code can and should be moved into core-database-postgres instead
-                and leverage either the plugins `tearDown` method or the event-emitter's 'shutdown' event
-                 */
-                const database = this.resolvePlugin("database");
-                if (database) {
-                    const emitter = this.resolvePlugin<EventEmitter.EventEmitter>("event-emitter");
+    /**
+     * Get the alias for an abstract if available.
+     */
+    public getAlias(key: string): string {
+        if (!this.aliases[key]) {
+            return key;
+        }
 
-                    // Notify plugins about shutdown
-                    emitter.emit("shutdown");
+        if (this.aliases[key] === key) {
+            throw new Error(`[${key}] is aliased to itself.`);
+        }
 
-                    // Wait for event to be emitted and give time to finish
-                    await delay(1000);
+        return this.getAlias(this.aliases[key]);
+    }
 
-                    // Save dirty wallets
-                    await database.saveWallets(false);
-                }
-            } catch (error) {
-                // tslint:disable-next-line:no-console
-                console.error(error.stack);
-            }
+    /**
+     * Remove a resolved instance from the instance cache.
+     */
+    public forgetInstance(key: string): void {
+        delete this.instances[key];
+    }
 
-            await this.plugins.tearDown();
+    /**
+     * Clear all of the instances from the container.
+     */
+    public forgetInstances(): void {
+        this.instances = [];
+    }
 
-            process.exit();
-        };
+    /**
+     * Flush the container of all bindings and resolved instances.
+     */
+    public flush(): void {
+        this.aliases = [];
+        this.resolved = [];
+        this.bindings = [];
+        this.methodBindings = [];
+        this.instances = [];
+    }
 
-        // Handle exit events
-        exitEvents.forEach(eventType => process.on(eventType as any, handleExit));
+    /**
+     * Resolve the given type from the container.
+     */
+    protected resolve(key: string, parameters: Record<string, any> = []): any {
+        // @TODO
+    }
+
+    /**
+     * Get the concrete type for a given abstract.
+     */
+    protected getConcrete(abstract): any {
+        // @TODO
+    }
+
+    /**
+     * Determine if the given concrete is buildable.
+     */
+    protected isBuildable(plugin: IPlugin): any {
+        // @TODO
+    }
+
+    /**
+     * Drop all of the stale instances and aliases.
+     */
+    protected dropStaleInstances(key: string): void {
+        delete this.instances[key];
+        delete this.aliases[key];
     }
 }
