@@ -93,43 +93,43 @@ export class Container {
     /**
      * Get a resolved instance from the container container.
      */
-    public getResolve<T = any>(key: string): T {
-        return this.resolved.get(key).concrete;
+    public getResolve<T = any>(abstract: string): T {
+        return this.resolved.get(abstract);
     }
 
     /**
      * Get a binding from the container container.
      */
-    public getBinding<T = any>(key: string): T {
-        return this.bindings.get(key).concrete;
+    public getBinding<T = any>(abstract: string): T {
+        return this.bindings.get(abstract);
     }
 
     /**
      * Get a method binding from the container container.
      */
-    public getMethodBinding<T = any>(key: string): T {
-        return this.methodBindings.get(key);
+    public getMethodBinding<T = any>(abstract: string): T {
+        return this.methodBindings.get(abstract);
     }
 
     /**
      * Get an instance binding from the container container.
      */
-    public getInstance<T = any>(key: string): T {
-        return this.instances.get(key).concrete;
+    public getInstance<T = any>(abstract: string): T {
+        return this.instances.get(abstract);
     }
 
     /**
      * Get the alias for an abstract if available.
      */
-    public getAlias(key: string): string {
-        if (!this.hasAlias(key)) {
-            return key;
+    public getAlias(abstract: string): string {
+        if (!this.hasAlias(abstract)) {
+            return abstract;
         }
 
-        const alias = this.aliases.get(key);
+        const alias = this.aliases.get(abstract);
 
-        if (alias === key) {
-            throw new Error(`[${key}] is aliased to itself.`);
+        if (alias === abstract) {
+            throw new Error(`[${abstract}] is aliased to itself.`);
         }
 
         return alias;
@@ -138,9 +138,9 @@ export class Container {
     /**
      * Determine if the container has any binding.
      */
-    public bound(key: string): boolean {
+    public bound(abstract: string): boolean {
         try {
-            this.resolve(key);
+            this.resolve(abstract);
 
             return true;
         } catch (error) {
@@ -151,65 +151,65 @@ export class Container {
     /**
      * Determine if the given abstract type has been bound.
      */
-    public has(key: string): boolean {
-        return this.bound(key);
+    public has(abstract: string): boolean {
+        return this.bound(abstract);
     }
 
     /**
      * Determine if the container has resolved the value.
      */
-    public hasResolved(key: string): boolean {
-        return this.resolved.has(key);
+    public hasResolved(abstract: string): boolean {
+        return this.resolved.has(abstract);
     }
 
     /**
      * Determine if the container has a classic binding.
      */
-    public hasBinding(key: string): boolean {
-        return this.bindings.has(key);
+    public hasBinding(abstract: string): boolean {
+        return this.bindings.has(abstract);
     }
 
     /**
      * Determine if the container has a method binding.
      */
-    public hasMethodBinding(key: string): boolean {
-        return this.methodBindings.has(key);
+    public hasMethodBinding(abstract: string): boolean {
+        return this.methodBindings.has(abstract);
     }
 
     /**
      * Determine if the container has an instance binding.
      */
-    public hasInstance(key: string): boolean {
-        return this.instances.has(key);
+    public hasInstance(abstract: string): boolean {
+        return this.instances.has(abstract);
     }
 
     /**
      * Determine if the container has an alias binding.
      */
-    public hasAlias(key: string): boolean {
-        return this.aliases.has(key);
+    public hasAlias(abstract: string): boolean {
+        return this.aliases.has(abstract);
     }
 
     /**
      * Determine if the given abstract type has been resolved.
      */
-    public isResolved(key: string): boolean {
-        if (this.isAlias(key)) {
-            key = this.getAlias(key);
+    public isResolved(abstract: string): boolean {
+        if (this.isAlias(abstract)) {
+            abstract = this.getAlias(abstract);
         }
 
-        return this.hasResolved(key) || this.hasInstance(key);
+        return this.hasResolved(abstract) || this.hasInstance(abstract);
     }
 
     /**
      * Determine if a given type is shared.
      */
-    public isShared(key: string): boolean {
-        if (this.hasInstance(key)) {
+    public isShared(abstract: string): boolean {
+        if (this.hasInstance(abstract)) {
             return true;
         }
 
-        const binding = this.bindings.get(key);
+        const binding = this.bindings.get(abstract);
 
         return binding && binding.shared && binding.shared === true;
     }
@@ -217,54 +217,54 @@ export class Container {
     /**
      * Determine if a given string is an alias.
      */
-    public isAlias(key: string): boolean {
-        return this.hasAlias(key);
+    public isAlias(abstract: string): boolean {
+        return this.hasAlias(abstract);
     }
 
     /**
      * Register a binding with the container.
      */
-    public register(key: string, value: any): void {
-        if (this.has(key)) {
-            throw new EntryAlreadyExists(key);
+    public register(abstract: string, value: any): void {
+        if (this.has(abstract)) {
+            throw new EntryAlreadyExists(abstract);
         }
 
-        this.container.register(key, awilix.asValue(value));
+        this.container.register(abstract, awilix.asValue(value));
     }
 
     /**
      * Register a binding with the container.
      */
-    public bind(key: string, concrete: any, shared: boolean = false, overwrite: boolean = false): void {
-        if (this.hasBinding(key) && !overwrite) {
-            throw new BindingAlreadyExists(key);
+    public bind(abstract: string, concrete: any, shared: boolean = false, overwrite: boolean = false): void {
+        if (this.hasBinding(abstract) && !overwrite) {
+            throw new BindingAlreadyExists(abstract);
         }
 
         if (shared) {
             concrete = concrete.singleton();
         }
 
-        if (this.isResolved(key)) {
+        if (this.isResolved(abstract)) {
             // @TODO
         }
 
-        this.bindings.set(key, { concrete, shared });
+        this.bindings.set(abstract, { concrete, shared });
     }
 
     /**
      * Register a binding if it hasn't already been registered.
      */
-    public bindIf(key: string, concrete: any): void {
-        if (!this.hasBinding(key)) {
-            this.bind(key, concrete);
+    public bindIf(abstract: string, concrete: any): void {
+        if (!this.hasBinding(abstract)) {
+            this.bind(abstract, concrete);
         }
     }
 
     /**
-     * Bind a callback to resolve with Container::call.
+     * Bind a callback to resolve with call.
      */
-    public bindMethod(method: string, callback: any): void {
-        this.methodBindings.set(method, callback);
+    public bindMethod(name: string, method: any): void {
+        this.methodBindings.set(name, method);
     }
 
     /**
@@ -277,19 +277,19 @@ export class Container {
     /**
      * Register a shared binding in the container.
      */
-    public singleton(key: string, concrete: any): void {
-        this.bind(key, awilix.asClass(concrete), true);
+    public singleton(abstract: string, concrete: any): void {
+        this.bind(abstract, awilix.asClass(concrete), true);
     }
 
     /**
      * Register an existing instance as shared in the container.
      */
-    public instance(key: string, value: any, overwrite: boolean = false): void {
-        if (this.instances.has(key) && !overwrite) {
-            throw new InstanceAlreadyExists(key);
+    public instance(abstract: string, concrete: any, overwrite: boolean = false): void {
+        if (this.instances.has(abstract) && !overwrite) {
+            throw new InstanceAlreadyExists(abstract);
         }
 
-        this.instances.set(key, value);
+        this.instances.set(abstract, concrete);
     }
 
     /**
@@ -311,36 +311,36 @@ export class Container {
     /**
      * Get a closure to resolve the given type from the container.
      */
-    public factory(key: string): any {
-        return this.make(key);
+    public factory(abstract: string): any {
+        return this.make(abstract);
     }
 
     /**
      * An alias function name for make().
      */
-    public makeWith(key: string, parameters: Record<string, any> = []): any {
-        return this.make(key, parameters);
+    public makeWith(abstract: string, parameters: Record<string, any> = []): any {
+        return this.make(abstract, parameters);
     }
 
     /**
      * Resolve the given type from the container.
      */
-    public make(key: string, parameters: Record<string, any> = []): any {
-        return this.resolve(key);
+    public make(abstract: string, parameters: Record<string, any> = []): any {
+        return this.resolve(abstract);
     }
 
     /**
      * Resolve the given type from the container.
      */
-    public get(key: string): any {
+    public get(abstract: string): any {
         try {
-            return this.resolve(key);
+            return this.resolve(abstract);
         } catch (error) {
-            if (this.has(key)) {
+            if (this.has(abstract)) {
                 throw error;
             }
 
-            throw new BindingDoesNotExist(key);
+            throw new BindingDoesNotExist(abstract);
         }
     }
 
@@ -354,36 +354,36 @@ export class Container {
     /**
      * Remove a value from the resolved cache.
      */
-    public forgetResolved(key: string): void {
-        this.resolved.delete(key);
+    public forgetResolved(abstract: string): void {
+        this.resolved.delete(abstract);
     }
 
     /**
      * Remove a value from the binding cache.
      */
-    public forgetBinding(key: string): void {
-        this.bindings.delete(key);
+    public forgetBinding(abstract: string): void {
+        this.bindings.delete(abstract);
     }
 
     /**
      * Remove a value from the method binding cache.
      */
-    public forgetMethodBinding(key: string): void {
-        this.methodBindings.delete(key);
+    public forgetMethodBinding(abstract: string): void {
+        this.methodBindings.delete(abstract);
     }
 
     /**
      * Remove a value from the instance cache.
      */
-    public forgetInstance(key: string): void {
-        this.instances.delete(key);
+    public forgetInstance(abstract: string): void {
+        this.instances.delete(abstract);
     }
 
     /**
      * Remove a value from the alias cache.
      */
-    public forgetAlias(key: string): void {
-        this.aliases.delete(key);
+    public forgetAlias(abstract: string): void {
+        this.aliases.delete(abstract);
     }
 
     /**
@@ -435,28 +435,28 @@ export class Container {
     /**
      * Drop all of the stale instances and aliases.
      */
-    public dropStaleInstances(key: string): void {
-        this.instances.delete(key);
-        this.aliases.delete(key);
+    public dropStaleInstances(abstract: string): void {
+        this.instances.delete(abstract);
+        this.aliases.delete(abstract);
     }
 
     /**
      * Resolve the given type from the container.
      */
-    private resolve<T = any>(key: string): T {
+    private resolve<T = any>(abstract: string): T {
         try {
-            const abstract = this.getAlias(key);
+            abstract = this.getAlias(abstract);
 
             // @TODO: return early if we already resolved the value once
 
-            let concrete = this.getConcrete(key);
+            let concrete = this.getConcrete(abstract);
             concrete = this.isBuildable(concrete, abstract) ? this.build(concrete) : this.make(concrete);
 
             if (this.isShared(abstract)) {
-                this.instances.set(key, abstract);
+                this.instances.set(abstract, abstract);
             }
 
-            concrete = this.container.resolve<T>(key);
+            concrete = this.container.resolve<T>(abstract);
 
             this.resolved.set(abstract, true);
 
@@ -469,8 +469,8 @@ export class Container {
     /**
      * Get the concrete type for a given abstract.
      */
-    private getConcrete(concrete: any): any {
-        return concrete;
+    private getConcrete(abstract: string): any {
+        return this.hasBinding(abstract) ? this.getBinding(abstract).concrete : abstract;
     }
 
     /**

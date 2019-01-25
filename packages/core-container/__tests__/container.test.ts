@@ -110,12 +110,12 @@ describe("Container", () => {
             container.bind("key", "value");
 
             expect(container.getBindings().size).toBe(1);
-            expect(container.getBinding("key")).toBe("value");
+            expect(container.getConcrete("key")).toBe("value");
 
             container.bind("key", "new-value", false, true);
 
             expect(container.getBindings().size).toBe(1);
-            expect(container.getBinding("key")).toBe("new-value");
+            expect(container.getConcrete("key")).toBe("new-value");
         });
     });
 
