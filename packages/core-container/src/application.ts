@@ -4,19 +4,19 @@ import Container from "./container";
 // @TODO: Include/Extend the Container
 export class Application {
     /**
-     * @TODO
+     * The current available container (if any).
      */
-    protected container: Container;
+    private container: Container;
 
     /**
      * Indicates if the application has "booted".
      */
-    protected booted: boolean = false;
+    private booted: boolean = false;
 
     /**
      * The application namespace.
      */
-    protected namespace: string;
+    private namespace: string;
 
     /**
      * Boot the application.
@@ -40,7 +40,7 @@ export class Application {
      * Get the path to the data directory.
      */
     public dataPath(path: string = ""): string {
-        return this.container.get("path.data") + path;
+        return this.container.get("path.data").concat(path);
     }
 
     /**
@@ -54,7 +54,7 @@ export class Application {
      * Get the path to the config directory.
      */
     public configPath(path: string = ""): string {
-        return this.container.get("path.config") + path;
+        return this.container.get("path.config").concat(path);
     }
 
     /**
@@ -68,7 +68,7 @@ export class Application {
      * Get the path to the cache directory.
      */
     public cachePath(path: string = ""): string {
-        return this.container.get("path.cache") + path;
+        return this.container.get("path.cache").concat(path);
     }
 
     /**
@@ -82,7 +82,7 @@ export class Application {
      * Get the path to the log directory.
      */
     public logPath(path: string = ""): string {
-        return this.container.get("path.log") + path;
+        return this.container.get("path.log").concat(path);
     }
 
     /**
@@ -96,7 +96,7 @@ export class Application {
      * Get the path to the temp directory.
      */
     public tempPath(path: string = ""): string {
-        return this.container.get("path.temp") + path;
+        return this.container.get("path.temp").concat(path);
     }
 
     /**
@@ -121,7 +121,7 @@ export class Application {
     }
 
     /**
-     * Get or check the current application environment.|bool
+     * Get or check the current application environment.
      */
     public environment() {
         // @TODO
