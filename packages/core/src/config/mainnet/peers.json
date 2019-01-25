@@ -2,19 +2,26 @@
     "list": [
 
 
-        //seednode v1 nayiem xqr_s_tr_185
+        
         {
             "ip": "185.85.18.192",
             "port": 4100
         },
         
-        //seednode v2 nayiem xqr_s_ho_136
+        
+        
+        
+        
         {
             "ip": "136.144.215.24",
             "port": 4101
         },
         
-        //v2-nodes synced nayiem
+        
+        
+        
+        
+        
         {
             "ip": "159.69.89.109",
             "port": 4101
@@ -32,7 +39,11 @@
             "port": 4101
         },
         
-        //v2-nodes syncing from start nayiem
+        
+        
+        
+        
+        
         {
             "ip": "116.203.56.119",
             "port": 4101
