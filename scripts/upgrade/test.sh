@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 
-rm -rf /home/ark/ark-core
-git clone https://github.com/ArkEcosystem/core -b upgrade /home/ark/ark-core
+rm -rf /home/qredit/qredit-core
+git clone https://github.com/Qredit/core -b upgrade /home/qredit/qredit-core
 
-mkdir /home/ark/.ark
-touch /home/ark/.ark/.env
+mkdir /home/qredit/.qredit
+touch /home/qredit/.qredit/.env
 
-mkdir /home/ark/.ark/config
+mkdir /home/qredit/.qredit/config
 
-mkdir /home/ark/.ark/database
-touch /home/ark/.ark/database/json-rpc.sqlite
-touch /home/ark/.ark/database/transaction-pool.sqlite
-touch /home/ark/.ark/database/webhooks.sqlite
+mkdir /home/qredit/.qredit/database
+touch /home/qredit/.qredit/database/json-rpc.sqlite
+touch /home/qredit/.qredit/database/transaction-pool.sqlite
+touch /home/qredit/.qredit/database/webhooks.sqlite
 
-mkdir /home/ark/.ark/logs
-mkdir /home/ark/.ark/logs/mainnet
-touch /home/ark/.ark/logs/mainnet/test.log
+mkdir /home/qredit/.qredit/logs
+mkdir /home/qredit/.qredit/logs/mainnet
+touch /home/qredit/.qredit/logs/mainnet/test.log
