@@ -8,6 +8,12 @@
             "port": 4100
         },
         
+        //seednode v2 nayiem xqr_s_ho_136
+        {
+            "ip": "136.144.215.24",
+            "port": 4101
+        },
+        
         //v2-nodes synced nayiem
         {
             "ip": "159.69.89.109",
