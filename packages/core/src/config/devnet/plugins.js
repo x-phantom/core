@@ -46,7 +46,7 @@ module.exports = {
     },
     "@arkecosystem/core-p2p": {
         host: process.env.CORE_P2P_HOST || "0.0.0.0",
-        port: process.env.CORE_P2P_PORT || 4002,
+        port: process.env.CORE_P2P_PORT || 4102,
         minimumNetworkReach: 5,
         coldStart: 5,
     },
@@ -56,7 +56,7 @@ module.exports = {
     "@arkecosystem/core-api": {
         enabled: !process.env.CORE_API_DISABLED,
         host: process.env.CORE_API_HOST || "0.0.0.0",
-        port: process.env.CORE_API_PORT || 4003,
+        port: process.env.CORE_API_PORT || 4103,
         whitelist: ["*"],
     },
     "@arkecosystem/core-webhooks": {
@@ -64,17 +64,17 @@ module.exports = {
         server: {
             enabled: process.env.CORE_WEBHOOKS_API_ENABLED,
             host: process.env.CORE_WEBHOOKS_HOST || "0.0.0.0",
-            port: process.env.CORE_WEBHOOKS_PORT || 4004,
+            port: process.env.CORE_WEBHOOKS_PORT || 4104,
             whitelist: ["127.0.0.1", "::ffff:127.0.0.1"],
         },
     },
     "@arkecosystem/core-graphql": {
         enabled: process.env.CORE_GRAPHQL_ENABLED,
         host: process.env.CORE_GRAPHQL_HOST || "0.0.0.0",
-        port: process.env.CORE_GRAPHQL_PORT || 4005,
+        port: process.env.CORE_GRAPHQL_PORT || 4105,
     },
     "@arkecosystem/core-forger": {
-        hosts: [`http://127.0.0.1:${process.env.CORE_P2P_PORT || 4002}`],
+        hosts: [`http://127.0.0.1:${process.env.CORE_P2P_PORT || 4102}`],
     },
     "@arkecosystem/core-json-rpc": {
         enabled: process.env.CORE_JSON_RPC_ENABLED,
