@@ -295,8 +295,10 @@ export class Container {
     /**
      * Alias a type to a different name.
      */
-    public alias(key: string, value: any) {
-        this.aliases.set(key, value);
+    public alias(abstract: string, alias: string) {
+        this.aliases.set(alias, abstract);
+
+        this.container.register({ [alias]: awilix.aliasTo(abstract) });
     }
 
     /**
@@ -396,38 +398,46 @@ export class Container {
     }
 
     /**
-     * Clear all of the resolved instances from the container.
+     * Clear all resolved instances from the container.
      */
     public flushResolved(): void {
         this.resolved.clear();
     }
 
     /**
-     * Clear all of the bindings from the container.
+     * Clear all bindings from the container.
      */
     public flushBindings(): void {
         this.bindings.clear();
     }
 
     /**
-     * Clear all of the method bindings from the container.
+     * Clear all method bindings from the container.
      */
     public flushMethodBindings(): void {
         this.methodBindings.clear();
     }
 
     /**
-     * Clear all of the instances from the container.
+     * Clear all instances from the container.
      */
     public flushInstances(): void {
         this.instances.clear();
     }
 
     /**
-     * Clear all of the aliases from the container.
+     * Clear all aliases from the container.
      */
     public flushAliases(): void {
         this.aliases.clear();
+    }
+
+    /**
+     * Drop all of the stale instances and aliases.
+     */
+    public dropStaleInstances(key: string): void {
+        this.instances.delete(key);
+        this.aliases.delete(key);
     }
 
     /**
@@ -436,6 +446,8 @@ export class Container {
     private resolve<T = any>(key: string): T {
         try {
             const abstract = this.getAlias(key);
+
+            // @TODO: return early if we already resolved the value once
 
             let concrete = this.getConcrete(key);
             concrete = this.isBuildable(concrete, abstract) ? this.build(concrete) : this.make(concrete);
@@ -466,13 +478,5 @@ export class Container {
      */
     private isBuildable(concrete: any, abstract: any): boolean {
         return concrete === abstract;
-    }
-
-    /**
-     * Drop all of the stale instances and aliases.
-     */
-    private dropStaleInstances(key: string): void {
-        this.instances.delete(key);
-        this.aliases.delete(key);
     }
 }

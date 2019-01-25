@@ -83,9 +83,9 @@ describe("Container", () => {
         });
 
         it("should be an alias", () => {
-            container.alias("key", "value");
+            container.alias("abstract", "alias");
 
-            expect(container.isAlias("key")).toBeTrue();
+            expect(container.isAlias("alias")).toBeTrue();
         });
     });
 
