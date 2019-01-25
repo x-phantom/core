@@ -13,13 +13,13 @@ const main = async () => {
     } = await prompts([{
         type: 'text',
         name: 'corePath',
-        initial: expandHomeDir('~/ark-core'),
+        initial: expandHomeDir('~/qredit-core'),
         message: 'Where is the installation located at?',
         validate: value => fs.existsSync(value) ? true : `${value} does not exist.`
     }, {
         type: 'text',
         name: 'coreData',
-        initial: expandHomeDir('~/.ark'),
+        initial: expandHomeDir('~/.qredit'),
         message: 'Where is the configuration located at?',
         validate: value => fs.existsSync(value) ? true : `${value} does not exist.`
     }, {
@@ -35,7 +35,7 @@ const main = async () => {
     }]);
 
     // Paths
-    const corePaths = envPaths('ark', {
+    const corePaths = envPaths('qredit', {
         suffix: 'core'
     });
 
@@ -93,7 +93,7 @@ const main = async () => {
         }
 
         const env = require("envfile").parseFileSync(commanderEnv);
-        env.CORE_DIR = env.CORE_DIR.replace('ark-core', 'core');
+        env.CORE_DIR = env.CORE_DIR.replace('qredit-core', 'core');
 
         let envOutput = '';
         for(const [key, value] of Object.entries(env)) {
@@ -190,7 +190,7 @@ const main = async () => {
 
     // Update environment file
     console.log('Update environment configuration');
-    fs.writeFileSync(`${paths.config.new}/.env`, envCurrent.replace('ARK_', 'CORE_'));
+    fs.writeFileSync(`${paths.config.new}/.env`, envCurrent.replace('QREDIT_', 'CORE_'));
 
     // Validate configuration files
     console.log('Validating configuration');
