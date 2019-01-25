@@ -1,4 +1,4 @@
-import { getNamespace } from "continuation-local-storage";
+import { BindingDoesNotExist } from "./errors";
 
 interface IPlugin {
     getName(): string;
@@ -67,7 +67,7 @@ export class Container {
     /**
      * Register a binding with the container.
      */
-    public bind(key: string, concrete: IPlugin | CallableFunction, shared: boolean = false): void {
+    public bind(key: string, concrete: any, shared: boolean = false): void {
         // @TODO
     }
 
@@ -95,7 +95,7 @@ export class Container {
     /**
      * Register a binding if it hasn't already been registered.
      */
-    public bindIf(key: string, concrete: IPlugin): void {
+    public bindIf(key: string, concrete: any): void {
         if (!this.bound(key)) {
             this.bind(key, concrete);
         }
@@ -161,7 +161,7 @@ export class Container {
                 throw error;
             }
 
-            throw new Error(`[${key}] is not registered.`);
+            throw new BindingDoesNotExist(key);
         }
     }
 

@@ -1,5 +1,5 @@
 import { existsSync } from "fs";
-import Container from "./container";
+import { Container } from "./container";
 
 // @TODO: Include/Extend the Container
 export class Application {
@@ -186,7 +186,7 @@ export class Application {
     /**
      * Get the application namespace.
      */
-    public getNamespace(): string {
+    public getNamespace(): any {
         if (this.namespace) {
             return this.namespace;
         }
