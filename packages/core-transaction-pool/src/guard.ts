@@ -1,22 +1,22 @@
 import { app } from "@arkecosystem/core-container";
-import { PostgresConnection } from "@arkecosystem/core-database-postgres";
-import { Logger, TransactionPool as transanctionPool } from "@arkecosystem/core-interfaces";
+import { Database, Logger, TransactionPool as transactionPool } from "@arkecosystem/core-interfaces";
 import { configManager, constants, models, slots } from "@arkecosystem/crypto";
 import pluralize from "pluralize";
 import { TransactionPool } from "./connection";
 import { dynamicFeeMatcher } from "./dynamic-fee";
+import { MemPoolTransaction } from "./mem-pool-transaction";
 import { isRecipientOnActiveNetwork } from "./utils/is-on-active-network";
 
 const { TransactionTypes } = constants;
 const { Transaction } = models;
 
-export class TransactionGuard implements transanctionPool.ITransactionGuard {
+export class TransactionGuard implements transactionPool.ITransactionGuard {
     public transactions: models.Transaction[] = [];
     public excess: string[] = [];
     public accept: Map<string, models.Transaction> = new Map();
     public broadcast: Map<string, models.Transaction> = new Map();
     public invalid: Map<string, models.Transaction> = new Map();
-    public errors: { [key: string]: transanctionPool.TransactionErrorDTO[] } = {};
+    public errors: { [key: string]: transactionPool.TransactionErrorDTO[] } = {};
 
     /**
      * Create a new transaction guard instance.
@@ -38,7 +38,7 @@ export class TransactionGuard implements transanctionPool.ITransactionGuard {
      *     value=[ { type, message }, ... ]
      * }
      */
-    public async validate(transactions: models.Transaction[]): Promise<transanctionPool.ValidationResultDTO> {
+    public async validate(transactions: models.Transaction[]): Promise<transactionPool.ValidationResultDTO> {
         this.pool.loggedAllowedSenders = [];
 
         // Cache transactions
@@ -96,6 +96,7 @@ export class TransactionGuard implements transanctionPool.ITransactionGuard {
      * It skips:
      * - transactions already in the pool
      * - transactions from blocked senders
+     * - transactions that are too large
      * - transactions from the future
      * - dynamic fee mismatch
      * - transactions based on type specific restrictions
@@ -114,6 +115,12 @@ export class TransactionGuard implements transanctionPool.ITransactionGuard {
                     transaction,
                     "ERR_SENDER_BLOCKED",
                     `Transaction ${transaction.id} rejected. Sender ${transaction.senderPublicKey} is blocked.`,
+                );
+            } else if (JSON.stringify(transaction).length > this.pool.options.maxTransactionBytes) {
+                this.__pushError(
+                    transaction,
+                    "ERR_TOO_LARGE",
+                    `Transaction ${transaction.id} is larger than ${this.pool.options.maxTransactionBytes} bytes.`,
                 );
             } else if (this.pool.hasExceededMaxTransactions(transaction)) {
                 this.excess.push(transaction.id);
@@ -175,6 +182,36 @@ export class TransactionGuard implements transanctionPool.ITransactionGuard {
         }
 
         const errors = [];
+
+        // This check must come before canApply otherwise a wallet may be incorrectly assigned a username when multiple
+        // conflicting delegate registrations for the same username exist in the same transaction payload
+        if (transaction.type === TransactionTypes.DelegateRegistration) {
+            const username = transaction.asset.delegate.username;
+            const delegateRegistrationsInPayload = this.transactions.filter(
+                tx => tx.type === TransactionTypes.DelegateRegistration && tx.asset.delegate.username === username,
+            );
+            if (delegateRegistrationsInPayload.length > 1) {
+                this.__pushError(
+                    transaction,
+                    "ERR_CONFLICT",
+                    `Multiple delegate registrations for "${username}" in transaction payload`,
+                );
+                return false;
+            }
+
+            const delegateRegistrationsInPool: MemPoolTransaction[] = Array.from(
+                this.pool.getTransactionsByType(TransactionTypes.DelegateRegistration),
+            );
+            if (delegateRegistrationsInPool.some(memTx => memTx.transaction.asset.delegate.username === username)) {
+                this.__pushError(
+                    transaction,
+                    "ERR_PENDING",
+                    `Delegate registration for "${username}" already in the pool`,
+                );
+                return false;
+            }
+        }
+
         if (!this.pool.walletManager.canApply(transaction, errors)) {
             this.__pushError(transaction, "ERR_APPLY", JSON.stringify(errors));
             return false;
@@ -237,9 +274,9 @@ export class TransactionGuard implements transanctionPool.ITransactionGuard {
      * @return {void}
      */
     public async __removeForgedTransactions() {
-        const database = app.resolvePlugin<PostgresConnection>("database");
+        const databaseService = app.resolvePlugin<Database.IDatabaseService>("database");
 
-        const forgedIdsSet = await database.getForgedTransactionsIds([
+        const forgedIdsSet = await databaseService.getForgedTransactionsIds([
             ...new Set([...this.accept.keys(), ...this.broadcast.keys()]),
         ]);
 

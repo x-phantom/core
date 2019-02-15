@@ -5,6 +5,7 @@ import { models } from "@arkecosystem/crypto";
 import { Blockchain } from "../../src/blockchain";
 import { BlockProcessor, BlockProcessorResult } from "../../src/processor";
 import * as handlers from "../../src/processor/handlers";
+import { ExceptionHandler, VerificationFailedHandler } from "../../src/processor/handlers";
 import { setUpFull, tearDownFull } from "../__support__/setup";
 
 const { Block } = models;
@@ -49,6 +50,26 @@ describe("Block processor", () => {
             "3045022100e7385c6ea42bd950f7f6ab8c8619cf2f66a41d8f8f185b0bc99af032cb25f30d02200b6210176a6cedfdcbe483167fd91c21d740e0e4011d24d679c601fdd46b0de9",
         createdAt: "2019-07-11T16:48:50.550Z",
     };
+
+    describe("getHandler", () => {
+        it("should return ExceptionHandler if block is an exception", async () => {
+            const exceptionBlock = new Block(blockTemplate);
+            exceptionBlock.data.id = "998877";
+
+            const configManager = app.getConfig();
+
+            configManager.set("exceptions.blocks", ["998877"]);
+
+            expect(await blockProcessor.getHandler(exceptionBlock)).toBeInstanceOf(ExceptionHandler);
+        });
+
+        it("should return VerificationFailedHandler if block failed verification", async () => {
+            const failedVerifBlock = new Block(blockTemplate);
+            failedVerifBlock.verification.verified = false;
+
+            expect(await blockProcessor.getHandler(failedVerifBlock)).toBeInstanceOf(VerificationFailedHandler);
+        });
+    });
 
     describe("process", () => {
         const getBlock = transactions =>
@@ -208,6 +229,29 @@ describe("Block processor", () => {
                 // if we try to process the block, it should be rejected
                 const rejected = await blockProcessor.process(blockDoubleForging);
                 expect(rejected).toBe(BlockProcessorResult.Rejected);
+            });
+
+            it("should reject a block with invalid timestamp", async () => {
+                const database = app.resolvePlugin("database");
+                const getActiveDelegatesBackup = database.getActiveDelegates;
+                database.getActiveDelegates = jest.fn(() => [delegates[0]]);
+
+                const forkBlockBackup = blockchain.forkBlock;
+                blockchain.forkBlock = jest.fn();
+
+                const block = new Block(getBlock([]));
+                block.verification.verified = true;
+                block.data.timestamp = 46582922;
+
+                blockchain.getLastBlock().data.timestamp = 46583330;
+
+                const rejected = await blockProcessor.process(block);
+                expect(blockchain.forkBlock).not.toHaveBeenCalled();
+                expect(rejected).toBe(BlockProcessorResult.Rejected);
+
+                blockchain.getLastBlock().data.timestamp = 0;
+                blockchain.forkBlock = forkBlockBackup;
+                database.getActiveDelegates = getActiveDelegatesBackup;
             });
 
             it("should 'discard but broadcast' a block higher than current height + 1", async () => {

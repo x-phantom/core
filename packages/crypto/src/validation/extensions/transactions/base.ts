@@ -34,7 +34,10 @@ export const base = joi =>
         amount: joi
             .alternatives()
             .try(
-                joi.bignumber(),
+                joi
+                    .bignumber()
+                    .integer()
+                    .positive(),
                 joi
                     .number()
                     .integer()
@@ -44,7 +47,10 @@ export const base = joi =>
         fee: joi
             .alternatives()
             .try(
-                joi.bignumber().min(1),
+                joi
+                    .bignumber()
+                    .integer()
+                    .positive(),
                 joi
                     .number()
                     .integer()
@@ -58,7 +64,6 @@ export const base = joi =>
             .string()
             .alphanum()
             .required(),
-        signatures: joi.array(),
         secondSignature: joi.string().alphanum(),
         signSignature: joi.string().alphanum(), // TODO: remove in 2.1
         confirmations: joi // TODO: remove in 2.1

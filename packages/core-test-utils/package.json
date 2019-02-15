@@ -1,19 +1,20 @@
 {
     "name": "@arkecosystem/core-test-utils",
     "description": "Test Utilities for Ark Core",
-    "version": "2.1.0",
+    "version": "2.1.2",
     "contributors": [
         "Brian Faust <brian@ark.io>",
         "Erwann Gentric <erwann@ark.io>",
         "Joshua Noack <joshua@ark.io>"
     ],
     "license": "MIT",
-    "main": "dist/index.js",
+    "main": "dist/index",
+    "types": "dist/index",
     "files": [
         "dist"
     ],
     "scripts": {
-        "prepublishOnly": "yarn test && yarn build",
+        "prepublishOnly": "yarn build",
         "pretest": "yarn lint && yarn build",
         "compile": "../../node_modules/typescript/bin/tsc",
         "build": "yarn clean && yarn compile",
