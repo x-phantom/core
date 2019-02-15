@@ -1,4 +1,4 @@
-# Qredit Core
+# Qredit Core 
 
 <p align="center">
     <img src="./banner.png" />
