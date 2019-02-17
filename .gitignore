@@ -68,3 +68,6 @@ docker/development
 
 # Vagrant
 .vagrant
+
+# Yarn Lockfile
+yarn.lock
