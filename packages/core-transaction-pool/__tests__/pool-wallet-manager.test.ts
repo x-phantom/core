@@ -1,13 +1,12 @@
-import { PostgresConnection } from "@arkecosystem/core-database-postgres";
-import { Blockchain, Container } from "@arkecosystem/core-interfaces";
+import { Blockchain, Container, Database } from "@arkecosystem/core-interfaces";
 import { generators } from "@arkecosystem/core-test-utils";
-import { delegates, genesisBlock } from "@arkecosystem/core-test-utils/src/fixtures/unitnet";
+import { delegates, genesisBlock, wallets } from "@arkecosystem/core-test-utils/src/fixtures/unitnet";
 import { crypto, models } from "@arkecosystem/crypto";
 import bip39 from "bip39";
 import { setUpFull, tearDownFull } from "./__support__/setup";
 
 const { Block } = models;
-const { generateTransfers, generateWallets } = generators;
+const { generateTransfers, generateWallets, generateDelegateRegistration, generateVote } = generators;
 
 const arktoshi = 10 ** 8;
 let container: Container.IContainer;
@@ -25,6 +24,26 @@ beforeAll(async () => {
 
 afterAll(async () => {
     await tearDownFull();
+});
+
+describe("canApply", () => {
+    it("should add an error for delegate registration when username is already taken", () => {
+        const delegateReg = generateDelegateRegistration("unitnet", wallets[11].passphrase, 1, false, "genesis_11")[0];
+        const errors = [];
+
+        expect(poolWalletManager.canApply(delegateReg, errors)).toBeFalse();
+        expect(errors).toEqual([`Can't apply transaction ${delegateReg.id}: delegate name already taken.`]);
+    });
+
+    it("should add an error when voting for a delegate that doesn't exist", () => {
+        const vote = generateVote("unitnet", wallets[11].passphrase, wallets[12].keys.publicKey, 1)[0];
+        const errors = [];
+
+        expect(poolWalletManager.canApply(vote, errors)).toBeFalse();
+        expect(errors).toEqual([
+            `Can't apply transaction ${vote.id}: delegate +${wallets[12].keys.publicKey} does not exist.`,
+        ]);
+    });
 });
 
 describe("applyPoolTransactionToSender", () => {
@@ -74,8 +93,8 @@ describe("applyPoolTransactionToSender", () => {
             const delegate = delegates[7];
             const delegateWallet = poolWalletManager.findByPublicKey(delegate.publicKey);
 
-            const wallets = generateWallets("unitnet", 4);
-            const poolWallets = wallets.map(w => poolWalletManager.findByAddress(w.address));
+            const walletsGen = generateWallets("unitnet", 4);
+            const poolWallets = walletsGen.map(w => poolWalletManager.findByAddress(w.address));
 
             expect(+delegateWallet.balance).toBe(+delegate.balance);
             poolWallets.forEach(w => {
@@ -86,12 +105,12 @@ describe("applyPoolTransactionToSender", () => {
                 {
                     // transfer from delegate to wallet 0
                     from: delegate,
-                    to: wallets[0],
+                    to: walletsGen[0],
                     amount: 100 * arktoshi,
                 },
                 {
                     // transfer from wallet 0 to delegatej
-                    from: wallets[0],
+                    from: walletsGen[0],
                     to: delegate,
                     amount: 55 * arktoshi,
                 },
@@ -103,7 +122,7 @@ describe("applyPoolTransactionToSender", () => {
                 // This is normally refused because it's a cold wallet, but since we want
                 // to test if chained transfers are refused, pretent it is not a cold wallet.
                 container
-                    .resolvePlugin<PostgresConnection>("database")
+                    .resolvePlugin<Database.IDatabaseService>("database")
                     .walletManager.findByPublicKey(transfer.senderPublicKey);
 
                 const errors = [];
@@ -112,7 +131,7 @@ describe("applyPoolTransactionToSender", () => {
 
                     expect(t.from).toBe(delegate);
                 } else {
-                    expect(t.from).toBe(wallets[0]);
+                    expect(t.from).toBe(walletsGen[0]);
                     expect(JSON.stringify(errors)).toEqual(
                         `["[PoolWalletManager] Can't apply transaction id:${transfer.id} from sender:${
                             t.from.address
@@ -120,9 +139,9 @@ describe("applyPoolTransactionToSender", () => {
                     );
                 }
 
-                container
-                    .resolvePlugin<PostgresConnection>("database")
-                    .walletManager.forgetByPublicKey(transfer.publicKey);
+                (container.resolvePlugin<Database.IDatabaseService>("database").walletManager as any).forgetByPublicKey(
+                    transfer.publicKey,
+                );
             });
 
             expect(+delegateWallet.balance).toBe(delegate.balance - (100 + 0.1) * arktoshi);
