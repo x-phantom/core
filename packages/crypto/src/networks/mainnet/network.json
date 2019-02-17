@@ -12,6 +12,6 @@
     "client": {
         "token": "XQR",
         "symbol": "XQR",
-        "explorer": "http://185.85.18.192:4200"
+        "explorer": "https://explorer.qredit.io"
     }
 }
