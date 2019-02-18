@@ -1,17 +1,17 @@
 {
     "name": "mainnet",
-    "messagePrefix": "Qredit message:\n",
+    "messagePrefix": "Swapblocks message:\n",
     "bip32": {
         "public": 70617039,
         "private": 70615956
     },
-    "pubKeyHash": 58,
-    "nethash": "5e67037fd290ba7ab378e84a591d251c46eb9770eb134983771fd602233bf193",
+    "pubKeyHash": 75,
+    "nethash": "d21f07a10a8314d558132de8a3848e6fa9edde754638d1aacd381c6efb8be81d",
     "wif": 187,
     "aip20": 0,
     "client": {
-        "token": "XQR",
-        "symbol": "XQR",
-        "explorer": "https://explorer.qredit.io"
+        "token": "SBX",
+        "symbol": "SBX",
+        "explorer": "https://explorer.swapblocks.io"
     }
 }
