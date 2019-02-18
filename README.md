@@ -1,3 +1,11 @@
+
+DO NOT USE THIS REPO.
+
+MINIMUM QUORUM IS SET TO 1.
+PLEASE CHANGE IN LIVE MODE.
+
+
+
 # Qredit Core 
 
 <p align="center">
