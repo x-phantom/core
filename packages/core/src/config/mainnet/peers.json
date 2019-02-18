@@ -29,8 +29,5 @@
         "port": 4100
     }
 
-    ],
-    "sources": [
-        "https://raw.githubusercontent.com/SwapBlocks/peers/master/mainnet.json"
     ]
 }
