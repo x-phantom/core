@@ -1,17 +1,17 @@
 {
     "name": "mainnet",
-    "messagePrefix": "Swapblocks message:\n",
+    "messagePrefix": "Persona message:\n",
     "bip32": {
         "public": 70617039,
         "private": 70615956
     },
-    "pubKeyHash": 75,
-    "nethash": "d21f07a10a8314d558132de8a3848e6fa9edde754638d1aacd381c6efb8be81d",
-    "wif": 187,
+    "pubKeyHash": 55,
+    "nethash": "14b55c1de06caa015362d59ad97a144bc3c9fc2b50ece84b78d13ceaeaf7d8fb",
+    "wif": 80,
     "aip20": 0,
     "client": {
-        "token": "SBX",
-        "symbol": "SBX",
-        "explorer": "https://explorer.swapblocks.io"
+        "token": "PRSN",
+        "symbol": "PRSN",
+        "explorer": "https://explorer.persona.im"
     }
 }
