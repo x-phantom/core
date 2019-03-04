@@ -1,17 +1,17 @@
 {
     "name": "mainnet",
-    "messagePrefix": "ARK message:\n",
+    "messagePrefix": "Persona message:\n",
     "bip32": {
         "public": 46090600,
         "private": 46089520
     },
-    "pubKeyHash": 23,
-    "nethash": "6e84d08bd299ed97c212c886c98a57e36545c8f5d645ca7eeae63a8bd62d8988",
+    "pubKeyHash": 55,
+    "nethash": "14b55c1de06caa015362d59ad97a144bc3c9fc2b50ece84b78d13ceaeaf7d8fb",
     "wif": 170,
     "aip20": 0,
     "client": {
-        "token": "ARK",
-        "symbol": "Ѧ",
-        "explorer": "https://explorer.ark.io"
+        "token": "PRSN",
+        "symbol": "P",
+        "explorer": "https://explorer.persona.im"
     }
 }

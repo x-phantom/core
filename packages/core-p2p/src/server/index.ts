@@ -33,9 +33,9 @@ const startServer = async config => {
         },
     });
 
-    await server.register({
-        plugin: require("./plugins/set-headers"),
-    });
+    // await server.register({
+    //     plugin: require("./plugins/set-headers"),
+    // });
 
     await server.register({
         plugin: require("./plugins/blockchain-ready"),

@@ -18,9 +18,9 @@ module.exports = {
         connection: {
             host: process.env.CORE_DB_HOST || "localhost",
             port: process.env.CORE_DB_PORT || 5432,
-            database: process.env.CORE_DB_DATABASE || `${process.env.CORE_TOKEN}_${process.env.CORE_NETWORK_NAME}`,
-            user: process.env.CORE_DB_USERNAME || process.env.CORE_TOKEN,
-            password: process.env.CORE_DB_PASSWORD || "password",
+            database: process.env.CORE_DB_DATABASE || `persona_core`,
+            user: process.env.CORE_DB_USERNAME || "postgres",
+            password: process.env.CORE_DB_PASSWORD || "postgres",
         },
     },
     "@arkecosystem/core-transaction-pool": {
@@ -46,7 +46,7 @@ module.exports = {
     },
     "@arkecosystem/core-p2p": {
         host: process.env.CORE_P2P_HOST || "0.0.0.0",
-        port: process.env.CORE_P2P_PORT || 4001,
+        port: process.env.CORE_P2P_PORT || 4102,
     },
     "@arkecosystem/core-blockchain": {
         fastRebuild: false,
