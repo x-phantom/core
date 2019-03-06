@@ -860,12 +860,12 @@
             "amount": 0,
             "fee": 0,
             "recipientId": null,
-            "senderPublicKey": "03c9f8f4001216603c152b4b4429c2ead322ac34672999e808d567a7d1140e46be",
+            "senderPublicKey": "03c9f8f4101216603c152b4b4429c2ead322ac34672999e808d567a7d1140e46be",
             "timestamp": 0,
             "asset": {
                 "delegate": {
                     "username": "genesis_51",
-                    "publicKey": "03c9f8f4001216603c152b4b4429c2ead322ac34672999e808d567a7d1140e46be"
+                    "publicKey": "03c9f8f4101216603c152b4b4429c2ead322ac34672999e808d567a7d1140e46be"
                 }
             },
             "signature": "3045022100ee961089d02d7bb68fe2257f6a972eeaf6e2c1a1ad2f491c417e161fedbb556b02204c834644e5b5cde9a0b3f92fa23bade7670efab0a067597f6c151ee633932706",

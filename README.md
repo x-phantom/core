@@ -1,4 +1,4 @@
-# Ark Core
+# SWAPBlocks Core
 
 <p align="center">
     <img src="./banner.png" />
@@ -10,7 +10,7 @@
 
 ## Introduction
 
-This repository contains all plugins that make up the Ark Core.
+This repository contains all plugins that make up Swapblocks Core.
 
 ## Documentation
 

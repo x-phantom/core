@@ -25,14 +25,27 @@
         }
     },
     {
-        "height": 75600,
-        "reward": 200000000
+        "height": 108000,
+        "reward": 500000000
+    },
+    
+    {
+      "height": 1608000,
+      "reward": 400000000
     },
     {
-        "height": 6600000,
-        "block": {
-            "maxTransactions": 150,
-            "maxPayload": 6300000
+      "height": 3108000,
+      "reward": 300000000
+    },
+    {
+      "height": 4608000,
+      "reward": 200000000
+    },
+    {
+      "height": 1900000,
+      "block": {
+         "maxTransactions": 150,
+         "maxPayload": 6300000
         }
     }
 ]

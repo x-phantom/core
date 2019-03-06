@@ -23,7 +23,7 @@ services:
     container_name: core-mainnet
     restart: always
     ports:
-     - "4001:4001"
+     - "4101:4101"
      - "4003:4003"
      - "127.0.0.1:4004:4004"
      - "127.0.0.1:4005:4005"
