@@ -11,9 +11,10 @@
         {
             "ip": "167.99.82.39",
             "port": 4101
+        },
+        {
+            "ip": "116.203.106.171",
+            "port": 4101
         }
-    ],
-    "sources": [
-        "https://raw.githubusercontent.com/SwapBlocks/peers/master/mainnet.json"
     ]
 }
