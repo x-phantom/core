@@ -40,7 +40,7 @@
             }
         }
     },
-
+    {
       "block": {
         "maxTransactions": 150,
         "maxPayload": 6300000
