@@ -1,3 +1,4 @@
+import { bignumify } from "@arkecosystem/core-utils";
 import { app } from "@arkecosystem/core-container";
 import { Blockchain, Database, EventEmitter, Logger } from "@arkecosystem/core-interfaces";
 import { roundCalculator } from "@arkecosystem/core-utils";
@@ -443,7 +444,10 @@ export class DatabaseService implements Database.IDatabaseService {
         }
 
         // Sum of all tx amount equals the sum of block.totalAmount
-        if (blockStats.totalAmount !== transactionStats.totalAmount) {
+        if (
+      bignumify(blockStats.totalAmount).isEqualTo(
+        bignumify(transactionStats.totalAmount),
+      ) {
             errors.push(
                 `Total transaction amounts: ${transactionStats.totalAmount}, total of block.totalAmount : ${
                     blockStats.totalAmount
