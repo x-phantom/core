@@ -446,7 +446,7 @@ export class DatabaseService implements Database.IDatabaseService {
         // Sum of all tx amount equals the sum of block.totalAmount
         if (
       bignumify(blockStats.totalAmount).isEqualTo(
-        bignumify(transactionStats.totalAmount),
+        bignumify(transactionStats.totalAmount),))
        {
             errors.push(
                 `Total transaction amounts: ${transactionStats.totalAmount}, total of block.totalAmount : ${
