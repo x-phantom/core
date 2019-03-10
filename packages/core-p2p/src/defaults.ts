@@ -1,14 +1,14 @@
 export const defaults = {
     host: process.env.CORE_P2P_HOST || "0.0.0.0",
-    port: process.env.CORE_P2P_PORT || 4101,
+    port: process.env.CORE_P2P_PORT || 5101,
     /**
      * The minimum peer version we expect
      */
-    minimumVersion: ">=2.1.0",
+    minimumVersion: ">=0.0.1",
     /**
      * The number of peers we expect to be available to start a relay
      */
-    minimumNetworkReach: 18,
+    minimumNetworkReach: 2,
     /**
      * The timeout for requests to other peers
      */
